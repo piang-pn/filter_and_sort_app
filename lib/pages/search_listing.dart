@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../data/currency.dart';
 import '../data/dummy_products.dart';
 import '../data/product_filter.dart';
 import '../models/product.dart';
+import 'checkout.dart';
 import 'filter_sort.dart';
 
 /// Listing / search results screen.
@@ -58,6 +60,14 @@ class _SearchListingPageState extends State<SearchListingPage> {
   }
 
   void _resetFilters() => setState(() => _filter = const FilterSelection());
+
+  void _openCheckout(Product product) {
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => CheckoutPage(product: product),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -200,7 +210,7 @@ class _SearchListingPageState extends State<SearchListingPage> {
     if (_filter.minPrice != 50000 || _filter.maxPrice != 500000) {
       chips.add(_RemovableChip(
         label:
-            '${_formatRupiah(_filter.minPrice)} - ${_formatRupiah(_filter.maxPrice)}',
+            '${formatRupiah(_filter.minPrice)} - ${formatRupiah(_filter.maxPrice)}',
         onRemove: () => setState(
           () => _filter = _filter.copyWith(minPrice: 50000, maxPrice: 500000),
         ),
@@ -254,8 +264,13 @@ class _SearchListingPageState extends State<SearchListingPage> {
         crossAxisSpacing: 14,
         childAspectRatio: 0.58,
       ),
-      itemBuilder: (BuildContext context, int index) =>
-          ProductGridCard(product: results[index]),
+      itemBuilder: (BuildContext context, int index) {
+        final Product product = results[index];
+        return ProductGridCard(
+          product: product,
+          onTap: () => _openCheckout(product),
+        );
+      },
     );
   }
 
@@ -445,111 +460,109 @@ class _RemovableChip extends StatelessWidget {
 
 /// Card for one catalogue item. Public so the listing stays testable.
 class ProductGridCard extends StatelessWidget {
-  const ProductGridCard({super.key, required this.product});
+  const ProductGridCard({super.key, required this.product, this.onTap});
 
   final Product product;
 
+  /// Opens the checkout screen for this product. Optional so the card can still
+  /// be rendered as a plain tile.
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.lightBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          AspectRatio(
-            aspectRatio: 1,
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Color(0xFFE7E4DC),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(11)),
-              ),
-              child: const Center(
-                child: Icon(Icons.image_outlined,
-                    size: 28, color: AppColors.textMuted),
-              ),
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    product.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: AppText.cardTitle,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.darkText,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${product.brand} · ${product.size}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: AppText.cardMeta,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                  const Spacer(),
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: Text(
-                          _formatRupiah(product.price),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.darkGreen,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.sageFill,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          product.condition,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.darkGreen,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.lightBorder),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            AspectRatio(
+              aspectRatio: 1,
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE7E4DC),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(11)),
+                ),
+                child: const Center(
+                  child: Icon(Icons.image_outlined,
+                      size: 28, color: AppColors.textMuted),
+                ),
               ),
             ),
-          ),
-        ],
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      product.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: AppText.cardTitle,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.darkText,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${product.brand} · ${product.size}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: AppText.cardMeta,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                    const Spacer(),
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Text(
+                            formatRupiah(product.price),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.darkGreen,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.sageFill,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            product.condition,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.darkGreen,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
-}
-
-String _formatRupiah(int value) {
-  final String digits = value.toString();
-  final StringBuffer buffer = StringBuffer();
-  for (int i = 0; i < digits.length; i++) {
-    if (i > 0 && (digits.length - i) % 3 == 0) buffer.write('.');
-    buffer.write(digits[i]);
-  }
-  return 'Rp ${buffer.toString()}';
 }
 
 String _sortLabel(String sortBy) {
