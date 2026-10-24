@@ -6,6 +6,7 @@ import '../data/product_filter.dart';
 import '../models/product.dart';
 import 'checkout.dart';
 import 'filter_sort.dart';
+import 'profile.dart';
 
 /// Listing / search results screen.
 ///
@@ -327,6 +328,18 @@ class _SearchListingPageState extends State<SearchListingPage> {
   // ----------------------------------------------------------- bottom nav ---
 
   Widget _buildBottomNav() {
+    return const ThriftBottomNav(currentIndex: 1);
+  }
+}
+
+/// Bottom navigation bar shared across the ThriftMate app.
+class ThriftBottomNav extends StatelessWidget {
+  const ThriftBottomNav({super.key, required this.currentIndex});
+
+  final int currentIndex;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       height: 72,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -335,31 +348,79 @@ class _SearchListingPageState extends State<SearchListingPage> {
         border: Border(top: BorderSide(color: AppColors.lightBorder)),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: <Widget>[
-          // Only the Search tab exists in this project; the other tabs from the
-          // original app are intentionally not wired up here.
-          _navItem(Icons.search, 'Search'),
+          _navItem(context, 0, Icons.home_outlined, 'Home'),
+          _navItem(context, 1, Icons.search_rounded, 'Search'),
+          _navItem(context, 2, Icons.add_circle_outline_rounded, 'Sell'),
+          _navItem(context, 3, Icons.shopping_bag_outlined, 'Orders'),
+          _navItem(context, 4, Icons.person_outline_rounded, 'Profile'),
         ],
       ),
     );
   }
 
-  Widget _navItem(IconData icon, String label) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        Icon(icon, size: 22, color: AppColors.darkGreen),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            color: AppColors.darkGreen,
+  Widget _navItem(
+    BuildContext context,
+    int index,
+    IconData icon,
+    String label,
+  ) {
+    final bool isSelected = index == currentIndex;
+    final Color color = isSelected ? AppColors.darkGreen : AppColors.textMuted;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        if (index == currentIndex) return;
+
+        if (index == 1) {
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          } else {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute<void>(
+                builder: (_) => const SearchListingPage(),
+              ),
+            );
+          }
+        } else if (index == 4) {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const ProfilePage(),
+            ),
+          );
+        } else {
+          final List<String> names = <String>[
+            'Home',
+            'Search',
+            'Sell',
+            'Orders',
+            'Profile'
+          ];
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Halaman ${names[index]} segera hadir.'),
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        }
+      },
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Icon(icon, size: 22, color: color),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              color: color,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
